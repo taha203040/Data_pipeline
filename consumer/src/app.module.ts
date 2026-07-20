@@ -10,10 +10,19 @@ import { CommonModule } from './common/common.module';
 import { KafkaService } from './kafka/kafka.service';
 import { KafkaModule } from './kafka/kafka.module';
 import { TestConsumer } from './test.consumer';
-
+import { TypeOrmModule } from '@nestjs/typeorm'
 @Module({
-  imports: [FraudDetectionModule, IdempotencyModule, CommonModule, KafkaModule],
+  imports: [FraudDetectionModule, IdempotencyModule, CommonModule, KafkaModule, TypeOrmModule.forRoot({
+    type: 'postgres',
+    host: 'localhost',
+    port: 5432,
+    username: 'postgres',
+    password: '0000',
+    database: 'tesst',
+    entities: [],
+    synchronize: true,
+  }),],
   controllers: [AppController, FraudDetectionController, KafkaController, CommonController],
-  providers: [AppService, KafkaService ,TestConsumer],
-})
-export class AppModule {}
+  providers: [AppService, KafkaService, TestConsumer],
+}) 
+export class AppModule { }

@@ -7,7 +7,7 @@ export class TestConsumer implements OnModuleInit {
     }
     async onModuleInit() {
         await this.consumerSvC.consume({
-            topics: ['test']
+            topics: ['transaction.requested']
         },
             {
                 eachMessage: async ({topic, partition, message}) => {
@@ -15,7 +15,7 @@ export class TestConsumer implements OnModuleInit {
                         value: message.value?.toString(),
                         topic,
                         partition,
-                    });
+                    }); 
                 }
             })
     }

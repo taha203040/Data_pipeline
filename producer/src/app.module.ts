@@ -4,12 +4,12 @@ import { AppService } from './app.service';
 import { OutboxModule } from './outbox/outbox.module';
 import { TransactionsModule } from './transactions/transactions.module';
 import { KafkaModule } from './kafka/kafka.module';
-import { EventsController } from './events/events.controller';
-import { EventsModule } from './events/events.module';
+// import { EventsController } from './events/events.controller';
+// import { EventsModule } from './events/events.module';
 
 @Module({
-  imports: [OutboxModule, TransactionsModule, KafkaModule, EventsModule],
-  controllers: [AppController, EventsController],
+  imports: [OutboxModule, TransactionsModule, KafkaModule],
+  controllers: [AppController ],
   providers: [AppService],
 })
 export class AppModule {}
