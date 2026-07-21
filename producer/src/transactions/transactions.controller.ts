@@ -1,6 +1,6 @@
 import { Controller, Post, Body, HttpException, HttpStatus } from '@nestjs/common';
 import { TransactionsService } from './transactions.service';
-import { TransactionRequestedEvent } from 'src/events/transaction-requested.event';
+import { TransactionRequestedEvent } from '@/events/transaction-requested.event';
 
 @Controller('transactions')
 export class TransactionsController {
