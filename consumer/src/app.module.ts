@@ -14,6 +14,7 @@ import { TypeOrmModule } from '@nestjs/typeorm'
 import { UserModule } from './user/user.module';
 import { UserService } from './user/user.service';
 import { User } from './user/dto/User_dto';
+import { RedisModule } from './redis/redis.module';
 @Module({
   imports: [FraudDetectionModule, IdempotencyModule, CommonModule, KafkaModule, TypeOrmModule.forRoot({
     type: 'postgres',
@@ -24,7 +25,7 @@ import { User } from './user/dto/User_dto';
     database: 'tesst',
     entities: [User],
     synchronize: true,
-  }), UserModule,],
+  }), UserModule, RedisModule,],
   controllers: [AppController, FraudDetectionController, KafkaController, CommonController],
   providers: [AppService, KafkaService,
     //  TestConsumer,

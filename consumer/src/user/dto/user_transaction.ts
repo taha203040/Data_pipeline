@@ -9,4 +9,6 @@ export class TransferMoneyDto {
 
   @IsUUID()
   receiverId!: string;
+  @IsUUID()
+  eventId!:string
 }

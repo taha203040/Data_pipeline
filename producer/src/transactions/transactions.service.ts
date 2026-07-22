@@ -11,6 +11,7 @@ export class TransactionsService {
   async transaction(body: TransactionRequestedEvent) {
     const event = new TransactionRequestedEvent(
       randomUUID(),
+      randomUUID(),
       body.userId,
       body.amount,
       body.receiverId,
