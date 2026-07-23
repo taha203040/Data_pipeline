@@ -1,9 +1,11 @@
-// entities/processed-event.entity.ts
-import { Entity, PrimaryColumn, CreateDateColumn } from 'typeorm';
+import { Entity, CreateDateColumn, Column, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('processed_events')
 export class ProcessedEvent {
-  @PrimaryColumn('uuid')
+  @PrimaryGeneratedColumn('uuid')
+  id!: string;
+
+  @Column()
   eventId!: string;
 
   @CreateDateColumn()

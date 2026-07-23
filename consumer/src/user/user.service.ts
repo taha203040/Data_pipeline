@@ -84,86 +84,85 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { TransferMoneyDto } from './dto/user_transaction';
 import { User } from './dto/User_dto';
-import { ProcessedEvent } from './dto/processed-event.entity'; 
+// import { ProcessedEvent } from './dto/processed-event.entity';
 import { IdempotencyService } from '../idempotency/idempotency.service';
 
 @Injectable()
-export class UserService implements OnModuleInit {
+export class UserService  {
   constructor(
-    private readonly ConsumerSVc: ConsumerSvc,
     private dataSrc: DataSource,
-    private readonly idempotency: IdempotencyService, // ← injected
+    private readonly idempotency: IdempotencyService,
   ) {}
+  async process(dto: TransferMoneyDto) {
+    const { eventId, amount, userId, receiverId } = dto;
+    console.log('eventeid', eventId);
 
-  async onModuleInit() {
-    await this.ConsumerSVc.consume(
-      { topics: ['transaction.requested'] },
-      {
-        eachMessage: async ({ topic, partition, message }) => {
-          const dto: TransferMoneyDto = JSON.parse(message.value?.toString() ?? '{}');
-          const { eventId, amount, userId, receiverId } = dto;
+    if (!eventId) {
+      console.log('Missing eventId, dropping message ❌');
+      return;
+    }
 
-          if (!eventId) {
-            console.log('Missing eventId, dropping message ❌');
-            return; // can't guarantee idempotency without it — don't process
-          }
+    const claimed = await this.idempotency.claim(eventId);
+    if (!claimed) {
+      console.log(`Duplicate event ${eventId}, skipping (Redis) ⏭️`);
+      return;
+    }
 
-          // ── Step 1: Redis fast-path check ──────────────────────────
-          const claimed = await this.idempotency.claim(eventId);
-          if (!claimed) {
-            console.log(`Duplicate event ${eventId}, skipping (Redis) ⏭️`);
-            return;
-          }
+    const queryRunner = this.dataSrc.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-          const queryRunner = this.dataSrc.createQueryRunner();
-          await queryRunner.connect();
-          await queryRunner.startTransaction();
+    try {
+      await this.insertProcessedEvent(queryRunner, eventId);
 
-          try {
-            // ── Step 2: DB-level backstop, same transaction as the balance update ──
-            try {
-              await queryRunner.manager.insert(ProcessedEvent, { eventId: eventId });
-            } catch (insertErr: any) {
-              if (insertErr.code === '23505') {
-                // unique violation — Redis missed it, DB caught it. Safe no-op.
-                console.log(`Duplicate event ${eventId}, skipping (DB) ⏭️`);
-                await queryRunner.rollbackTransaction();
-                return;
-              }
-              throw insertErr;
-            }
+      const { user, receiver } = await this.loadUsers(queryRunner, userId, receiverId);
+      console.log('user data', user, receiver);
 
-            const user = await queryRunner.manager.findOne(User, {
-              where: { id: userId?.toLowerCase() },
-            });
-            const receiver = await queryRunner.manager.findOne(User, {
-              where: { id: receiverId?.toLowerCase() },
-            });
+      if (user !== null && receiver !== null && user.balance >= amount && userId && receiverId) {
+        await this.transferMoney(queryRunner, userId, receiverId, amount);
+      } else {
+        console.log('Transaction rejected: invalid user or insufficient balance ⚠️');
+      }
 
-            console.log('user data', user, receiver);
+      await queryRunner.commitTransaction();
+      console.log('Transaction done ✅✅✅✅');
+    } catch (error) {
+      console.log('Transaction failed ❌❌❌❌', { err: error });
+      await queryRunner.rollbackTransaction();
+      await this.idempotency.release(eventId);
+    } finally {
+      await queryRunner.release();
+    }
+  }
 
-            if (user !== null && receiver !== null && user.balance >= amount && userId && receiverId) {
-              await queryRunner.manager.decrement(User, { id: userId }, 'balance', amount);
-              await queryRunner.manager.increment(User, { id: receiverId }, 'balance', amount);
-            } else {
-              // insufficient funds / missing user — still commit the processed_events insert
-              // so we don't reprocess a legitimately-rejected transaction on retry
-              console.log('Transaction rejected: invalid user or insufficient balance ⚠️');
-            }
+  private async insertProcessedEvent(queryRunner: any, eventId: string) {
+    try {
+      await queryRunner.manager.query(
+        `INSERT INTO processed_events (event_id) VALUES ($1)`,
+        [eventId],
+      );
+    } catch (insertErr: any) {
+      if (insertErr.code === '23505') {
+        console.log(`Duplicate event ${eventId}, skipping (DB) ⏭️`);
+        await queryRunner.rollbackTransaction();
+        return;
+      }
+      throw insertErr;
+    }
+  }
 
-            await queryRunner.commitTransaction();
-            console.log('Transaction done ✅✅✅✅');
-          } catch (error) {
-            console.log('Transaction failed ❌❌❌❌', { err: error });
-            await queryRunner.rollbackTransaction();
-            await this.idempotency.release(eventId); // let a genuine retry actually retry
-          } finally {
-            await queryRunner.release();
-          }
+  private async loadUsers(queryRunner: any, userId: string, receiverId: string) {
+    const user = await queryRunner.manager.findOne(User, {
+      where: { id: userId?.toLowerCase() },
+    });
+    const receiver = await queryRunner.manager.findOne(User, {
+      where: { id: receiverId?.toLowerCase() },
+    });
+    return { user, receiver };
+  }
 
-          console.log({ value: message.value?.toString(), topic, partition });
-        },
-      },
-    );
+  private async transferMoney(queryRunner: any, userId: string, receiverId: string, amount: number) {
+    await queryRunner.manager.decrement(User, { id: userId }, 'balance', amount);
+    await queryRunner.manager.increment(User, { id: receiverId }, 'balance', amount);
   }
 }

@@ -31,6 +31,7 @@ export class TransactionsService {
     return {
       message: 'Transaction request sent to Kafka',
       transactionId: event.transactionId,
+      eventId:event.eventId
     };
   }
 }

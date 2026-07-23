@@ -15,6 +15,7 @@ import { UserModule } from './user/user.module';
 import { UserService } from './user/user.service';
 import { User } from './user/dto/User_dto';
 import { RedisModule } from './redis/redis.module';
+import { IdempotencyService } from './idempotency/idempotency.service';
 @Module({
   imports: [FraudDetectionModule, IdempotencyModule, CommonModule, KafkaModule, TypeOrmModule.forRoot({
     type: 'postgres',
@@ -29,7 +30,7 @@ import { RedisModule } from './redis/redis.module';
   controllers: [AppController, FraudDetectionController, KafkaController, CommonController],
   providers: [AppService, KafkaService,
     //  TestConsumer,
-    UserService
+    UserService,IdempotencyService
     ],
 }) 
 export class AppModule { }
