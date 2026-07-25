@@ -1,5 +1,5 @@
 import { Injectable, OnApplicationShutdown } from '@nestjs/common';
-import { Consumer, ConsumerRunConfig, ConsumerSubscribeTopics, Kafka } from 'kafkajs'
+import { Consumer, ConsumerRunConfig, ConsumerSubscribeTopics, Kafka, Producer, ProducerRecord } from 'kafkajs'
 @Injectable()
 export class KafkaService { }
 
@@ -24,4 +24,19 @@ export class ConsumerSvc implements OnApplicationShutdown {
     }
 
 }
-
+@Injectable()
+export class ProducerSvc {
+    private readonly kafka = new Kafka({
+        brokers: ['localhost:9092']
+    })
+    private readonly producer: Producer = this.kafka.producer()
+    async onApplicationShutdown() {
+        await this.producer.disconnect()
+    }
+    async produce(record: ProducerRecord) {
+        await this.producer.send(record)
+    }
+    async onModuleInit() {
+        await this.producer.connect()
+    }
+}
