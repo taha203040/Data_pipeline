@@ -7,7 +7,7 @@ import { IdempotencyModule } from './idempotency/idempotency.module';
 import { KafkaController } from './kafka/kafka.controller';
 import { CommonController } from './common/common.controller';
 import { CommonModule } from './common/common.module';
-import { KafkaService } from './kafka/kafka.service';
+import { KafkaService, ProducerSvc } from './kafka/kafka.service';
 import { KafkaModule } from './kafka/kafka.module';
 import { TestConsumer } from './test.consumer';
 import { TypeOrmModule } from '@nestjs/typeorm'
@@ -30,7 +30,7 @@ import { IdempotencyService } from './idempotency/idempotency.service';
   controllers: [AppController, FraudDetectionController, KafkaController, CommonController],
   providers: [AppService, KafkaService,
     //  TestConsumer,
-    UserService,IdempotencyService
+    UserService,IdempotencyService , ProducerSvc
     ],
 }) 
 export class AppModule { }

@@ -17,8 +17,8 @@ export const REDIS_CLIENT = 'REDIS_CLIENT';
           host: config.get('REDIS_HOST', 'localhost'),
           port: config.get('REDIS_PORT', 6379),
           password: config.get('REDIS_PASSWORD') || undefined,
-          maxRetriesPerRequest: 3,
-          retryStrategy: (times) => Math.min(times * 200, 2000), // backoff on reconnect
+          // maxRetriesPerRequest: 3,
+          // retryStrategy: (times) => Math.min(times * 200, 2000), // backoff on reconnect
         });
 
         client.on('error', (err) => console.error('Redis connection error:', err));

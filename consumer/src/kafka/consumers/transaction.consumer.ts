@@ -1,5 +1,5 @@
 import { Injectable, OnModuleInit } from "@nestjs/common";
-import { ConsumerSvc } from "../kafka.service";
+import { ConsumerSvc, ProducerSvc } from "../kafka.service";
 import { UserService } from "@/user/user.service";
 
 @Injectable()
@@ -7,15 +7,41 @@ export class TransactionConsumer implements OnModuleInit {
   constructor(
     private readonly kafka: ConsumerSvc,
     private readonly userService: UserService,
-  ) {}
+    private readonly ProducerSvc: ProducerSvc
+  ) { }
 
   async onModuleInit() {
+    // await this.kafka.consume(
+    //   { topics: ['transaction.requested'] },
+    //   {
+    //     eachMessage: async ({ message }) => {
+    //       const dto = JSON.parse(message.value?.toString() ?? '{}');
+    //       await this.userService.process(dto);
+    //     },
+    //   },
+    // );
+
     await this.kafka.consume(
       { topics: ['transaction.requested'] },
       {
         eachMessage: async ({ message }) => {
           const dto = JSON.parse(message.value?.toString() ?? '{}');
-          await this.userService.process(dto);
+
+          try {
+            await this.userService.process(dto);
+          } catch (err) {
+            dto.retryCount = 1;
+
+            await this.ProducerSvc.produce({
+              topic: 'transaction.retry',
+              messages: [
+                {
+                  key: dto.eventId,
+                  value: JSON.stringify(dto),
+                },
+              ],
+            });
+          }
         },
       },
     );
