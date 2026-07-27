@@ -5,6 +5,7 @@ import { TransferMoneyDto } from './dto/user_transaction';
 import { User } from './dto/User_dto';
 // import { ProcessedEvent } from './dto/processed-event.entity';
 import { IdempotencyService } from '../idempotency/idempotency.service';
+import pRetry from 'p-retry';
 
 @Injectable()
 export class UserService {
@@ -13,7 +14,8 @@ export class UserService {
     private readonly idempotency: IdempotencyService,
     private readonly ProducerSvc: ProducerSvc
   ) { }
-  async process(dto: TransferMoneyDto) {
+
+  async executeTransaction(dto: TransferMoneyDto) {
     const { eventId, amount, userId, receiverId } = dto;
     console.log('eventeid', eventId);
 
@@ -77,7 +79,26 @@ export class UserService {
       await queryRunner.release();
     }
   }
-
+async process(dto: TransferMoneyDto) {
+    await pRetry(
+        async () => {
+          
+    try {          
+      await this.executeTransaction(dto);
+        } catch (er) {
+                 console.log('max retry reach✅✅✅✅✅✅')
+                      }
+        },
+        {
+            retries: 3,
+            maxTimeout :6000,
+            minTimeout :3000,
+            randomize : true
+        },
+    );
+    
+    
+}
   private async insertProcessedEvent(queryRunner: any, eventId: string) {
     try {
       await queryRunner.manager.query(

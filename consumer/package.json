@@ -28,6 +28,7 @@
     "class-validator": "^0.15.1",
     "ioredis": "^5.11.1",
     "kafkajs": "^2.2.4",
+    "p-retry": "^8.0.0",
     "postgresql": "^0.0.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",

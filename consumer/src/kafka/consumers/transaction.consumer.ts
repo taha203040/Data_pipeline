@@ -1,7 +1,7 @@
 import { Injectable, OnModuleInit } from "@nestjs/common";
 import { ConsumerSvc, ProducerSvc } from "../kafka.service";
 import { UserService } from "@/user/user.service";
-
+import pRetry from "p-retry";
 @Injectable()
 export class TransactionConsumer implements OnModuleInit {
   constructor(
@@ -29,18 +29,10 @@ export class TransactionConsumer implements OnModuleInit {
 
           try {
             await this.userService.process(dto);
-          } catch (err) {
-            dto.retryCount = 1;
-
-            await this.ProducerSvc.produce({
-              topic: 'transaction.retry',
-              messages: [
-                {
-                  key: dto.eventId,
-                  value: JSON.stringify(dto),
-                },
-              ],
-            });
+          }
+          catch (err) {
+            console.log("Error LOGGED❌❌❌❌❌❌❌", err)
+            throw new Error('Retry not works')
           }
         },
       },
