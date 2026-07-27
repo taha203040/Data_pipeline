@@ -1,7 +1,6 @@
 import { Injectable, OnModuleInit } from "@nestjs/common";
 import { ConsumerSvc, ProducerSvc } from "../kafka.service";
 import { UserService } from "@/user/user.service";
-import pRetry from "p-retry";
 @Injectable()
 export class TransactionConsumer implements OnModuleInit {
   constructor(
@@ -37,5 +36,25 @@ export class TransactionConsumer implements OnModuleInit {
         },
       },
     );
+  }
+}
+
+@Injectable()
+export class TransactionDLQConsumer implements OnModuleInit {
+  constructor(private readonly kafka: ConsumerSvc) { }
+  async onModuleInit() {
+    console.log('DLQ PASS HERE ✅✅✅✅✅')
+    await this.kafka.consume({
+      topics: ['DLQ.transaction']
+    }, {
+      eachMessage: async ({ message }) => {
+        try {
+          const payload = JSON.stringify(message.value ?? '{}')
+          console.log('the payload✅✅✅✅✅✅', payload)
+        } catch (e) {
+          console.log('FAILED',e)
+        }
+      }
+    })
   }
 }

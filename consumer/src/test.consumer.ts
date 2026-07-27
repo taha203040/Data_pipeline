@@ -11,7 +11,7 @@ export class TestConsumer implements OnModuleInit {
         },
             {
                 eachMessage: async ({topic, partition, message}) => {
-                    console.log({
+                    console.log('hello from test✅✅✅',{
                         value: message.value?.toString(),
                         topic,
                         partition,

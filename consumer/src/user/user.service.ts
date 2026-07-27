@@ -63,7 +63,7 @@ export class UserService {
               , amount: dto.amount
             },
             reason: error,
-            service: "consumer",
+            service: "User_Consumer",
             retryCount: process.env.RETRIES,
             failedAt: new Date()
           })
@@ -91,9 +91,9 @@ async process(dto: TransferMoneyDto) {
         },
         {
             retries: 3,
-            maxTimeout :6000,
-            minTimeout :3000,
-            randomize : true
+            maxTimeout :3000,
+            minTimeout :1000,
+            // randomize : true
         },
     );
     
