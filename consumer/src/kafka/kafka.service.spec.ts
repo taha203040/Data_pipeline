@@ -1,18 +1,46 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { KafkaService } from './kafka.service';
+import { ConsumerSvc } from './kafka.service';
+import { TransactionDLQConsumer } from './consumers/transaction.consumer';
 
-describe('KafkaService', () => {
-  let service: KafkaService;
+describe('TransactionDLQConsumer', () => {
+  let consumer: TransactionDLQConsumer;
+
+  const mockConsumerSvc = {
+    consume: jest.fn(),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [KafkaService],
+      providers: [
+        TransactionDLQConsumer,
+        {
+          provide: ConsumerSvc,
+          useValue: mockConsumerSvc,
+        },
+      ],
     }).compile();
 
-    service = module.get<KafkaService>(KafkaService);
+    consumer = module.get<TransactionDLQConsumer>(TransactionDLQConsumer);
+
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
-    expect(service).toBeDefined();
+    expect(consumer).toBeDefined();
+  });
+
+  it('should subscribe to DLQ.transaction topic', async () => {
+    await consumer.onModuleInit();
+
+    expect(mockConsumerSvc.consume).toHaveBeenCalledTimes(1);
+
+    expect(mockConsumerSvc.consume).toHaveBeenCalledWith(
+      {
+        topics: ['DLQ.transaction'],
+      },
+      expect.objectContaining({
+        eachMessage: expect.any(Function),
+      }),
+    );
   });
 });
