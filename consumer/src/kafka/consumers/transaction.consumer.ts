@@ -21,7 +21,7 @@ export class TransactionConsumer implements OnModuleInit {
     // );
 
     await this.kafka.consume(
-      'transaction-group',
+      'transaction-group ',
       { topics: ['transaction.requested'] },
       {
         eachMessage: async ({ message }) => {
