@@ -9,12 +9,18 @@ export class ConsumerSvc implements OnApplicationShutdown {
         brokers: ['localhost:9092']
     })
     private readonly consumers: Consumer[] = []
-    async consume(topic: ConsumerSubscribeTopics, config: ConsumerRunConfig) {
-        const consumer = this.kafka.consumer({ groupId: "kafka-nest" })
-        await consumer.connect()
-        await consumer.subscribe(topic)
-        await consumer.run(config)
-        this.consumers.push(consumer)
+    async consume(
+        groupId: string,
+        topic: ConsumerSubscribeTopics,
+        config: ConsumerRunConfig,
+    ) {
+        const consumer = this.kafka.consumer({ groupId });
+
+        await consumer.connect();
+        await consumer.subscribe(topic);
+        await consumer.run(config);
+
+        this.consumers.push(consumer);
     }
 
     async onApplicationShutdown() {

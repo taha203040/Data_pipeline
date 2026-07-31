@@ -29,7 +29,7 @@ import { IdempotencyService } from './idempotency/idempotency.service';
   }), UserModule, RedisModule,],
   controllers: [AppController, FraudDetectionController, KafkaController, CommonController],
   providers: [AppService, KafkaService,
-     TestConsumer,
+    //  TestConsumer,
     UserService,IdempotencyService , ProducerSvc
     ],
 }) 

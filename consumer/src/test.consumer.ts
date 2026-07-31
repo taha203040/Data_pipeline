@@ -6,16 +6,20 @@ export class TestConsumer implements OnModuleInit {
 
     }
     async onModuleInit() {
-        await this.consumerSvC.consume({
-            topics: ['transaction.requested']
+        await this.consumerSvC.consume(
+            'transaction-group', {
+            topics: [
+                // 'transaction.requested'
+                'DLQ.transaction'
+            ]
         },
             {
-                eachMessage: async ({topic, partition, message}) => {
-                    console.log('hello from test✅✅✅',{
+                eachMessage: async ({ topic, partition, message }) => {
+                    console.log('hello from test✅✅✅', {
                         value: message.value?.toString(),
                         topic,
                         partition,
-                    }); 
+                    });
                 }
             })
     }

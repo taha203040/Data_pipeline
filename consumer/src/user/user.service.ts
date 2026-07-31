@@ -91,8 +91,8 @@ async process(dto: TransferMoneyDto) {
         },
         {
             retries: 3,
-            maxTimeout :3000,
-            minTimeout :1000,
+            maxTimeout :5000,
+            minTimeout :3000,
             // randomize : true
         },
     );

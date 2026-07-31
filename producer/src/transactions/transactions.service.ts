@@ -1,6 +1,6 @@
 import { TransactionRequestedEvent } from '@/events/transaction-requested.event';
 import { ProducerSvc } from '@/kafka/kafka.service';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 
 

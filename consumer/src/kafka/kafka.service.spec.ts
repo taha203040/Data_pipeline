@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConsumerSvc } from './kafka.service';
-import { TransactionDLQConsumer } from './consumers/transaction.consumer';
+import { TransactionDLQConsumer } from './consumers/DLQ.transaction';
 
 describe('TransactionDLQConsumer', () => {
   let consumer: TransactionDLQConsumer;

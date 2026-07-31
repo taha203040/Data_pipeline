@@ -21,6 +21,7 @@ export class TransactionConsumer implements OnModuleInit {
     // );
 
     await this.kafka.consume(
+      'transaction-group',
       { topics: ['transaction.requested'] },
       {
         eachMessage: async ({ message }) => {
@@ -39,22 +40,3 @@ export class TransactionConsumer implements OnModuleInit {
   }
 }
 
-@Injectable()
-export class TransactionDLQConsumer implements OnModuleInit {
-  constructor(private readonly kafka: ConsumerSvc) { }
-  async onModuleInit() {
-    console.log('DLQ PASS HERE ✅✅✅✅✅')
-    await this.kafka.consume({
-      topics: ['DLQ.transaction']
-    }, {
-      eachMessage: async ({ message }) => {
-        try {
-          const payload = JSON.stringify(message.value ?? '{}')
-          console.log('the payload✅✅✅✅✅✅', payload)
-        } catch (e) {
-          console.log('FAILED',e)
-        }
-      }
-    })
-  }
-}
