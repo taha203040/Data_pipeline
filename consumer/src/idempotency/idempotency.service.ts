@@ -10,22 +10,23 @@ export class IdempotencyService {
   async claim(eventId: string): Promise<boolean> {
     console.log("Before Redis");
 
-    try {
-      const result = await this.redis.set(
-        `idem:${eventId}`,
-        "1",
-        "EX",
-        86400,
-        "NX"
-      );
+    // try {
+    //   const result = await this.redis.set(
+    //     `idem:${eventId}`,
+    //     "1",
+    //     "EX",
+    //     86400,
+    //     "NX"
+    //   );
 
-      console.log("After Redis");
+    //   console.log("After Redis");
 
-      return result === "OK";
-    } catch (err) {
-      console.log("Redis SET threw: ❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌", err);
-      throw err;
-    }
+    //   return result === "OK";
+    // } catch (err) {
+    //   console.log("Redis SET threw: ❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌", err);
+    //   throw err;
+    // }
+    throw new Error('Test error dlq❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌')
   }
   async release(transactionId: string): Promise<void> {
     await this.redis.del(`idem:${transactionId}`);

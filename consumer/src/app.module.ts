@@ -16,6 +16,9 @@ import { UserService } from './user/user.service';
 import { User } from './user/dto/User_dto';
 import { RedisModule } from './redis/redis.module';
 import { IdempotencyService } from './idempotency/idempotency.service';
+import { PrometheusService } from './prometheus/prometheus.service';
+import { PrometheusModule } from '@willsoto/nestjs-prometheus'
+import { MetricsModule } from './prometheus/prometheus.module';
 @Module({
   imports: [FraudDetectionModule, IdempotencyModule, CommonModule, KafkaModule, TypeOrmModule.forRoot({
     type: 'postgres',
@@ -26,11 +29,11 @@ import { IdempotencyService } from './idempotency/idempotency.service';
     database: 'tesst',
     entities: [User],
     synchronize: true,
-  }), UserModule, RedisModule,],
+  }), UserModule, RedisModule, PrometheusModule.register(), PrometheusModule, MetricsModule],
   controllers: [AppController, FraudDetectionController, KafkaController, CommonController],
   providers: [AppService, KafkaService,
     //  TestConsumer,
-    UserService,IdempotencyService , ProducerSvc
-    ],
-}) 
+    IdempotencyService, ProducerSvc
+  ],
+})
 export class AppModule { }
