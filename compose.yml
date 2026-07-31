@@ -3,7 +3,7 @@ services:
     image: grafana/grafana:latest
     container_name : grafana
     ports:
-      - '3100:3100'
+      - '3000:3000'
     # depends_on:
     #   - prometheus
   prometheus:
