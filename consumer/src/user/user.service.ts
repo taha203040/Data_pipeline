@@ -55,6 +55,21 @@ export class UserService {
 
       await queryRunner.commitTransaction();
       this.logger.log('Transaction done ✅✅')
+       await this.ProducerSvc.produce({
+    topic: 'transaction.succeeded',
+    messages: [
+      {
+        key: dto.userId.toString(),
+        value: JSON.stringify({
+          eventId: crypto.randomUUID(),
+          userId: dto.userId,
+          receiverId: dto.receiverId,
+          amount: dto.amount,
+          failedAt: new Date().toISOString(),
+        }),
+      },
+    ],
+  });
     } catch (error) {
       this.logger.log('Transaction failed ❌❌❌❌', { err: error })
       await this.ProducerSvc.produce({

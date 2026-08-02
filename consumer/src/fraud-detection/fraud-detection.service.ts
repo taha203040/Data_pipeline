@@ -19,7 +19,7 @@ export class FraudDetectionService {
     ): Promise<FraudResult> {
 
         await this.producer.produce({
-            topic: 'failed.transaction',
+            topic: 'transaction.failed',
             messages: [
                 {
                     key: dto.userId.toString(),

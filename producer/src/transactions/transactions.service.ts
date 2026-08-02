@@ -43,12 +43,12 @@ export class TransactionFailedConsumer implements OnModuleInit {
   constructor(
     private readonly consumerSvc: ConsumerSvc,
     private readonly logger: Loggsvc,
-  ) {}
+  ) { }
 
   async onModuleInit() {
     await this.consumerSvc.consume(
-      'transaction-failed-group',
-      { topics: ['failed.transaction'] },
+      'transaction-state-group',
+      { topics: ['transaction.failed', 'transaction.succeeded'] },
       {
         eachMessage: async ({ message }) => {
           const payload = JSON.parse(
@@ -56,7 +56,7 @@ export class TransactionFailedConsumer implements OnModuleInit {
           );
 
           this.logger.log(
-            `Failed transaction received: ${JSON.stringify(payload)}`,
+            ` Transaction state received: ${JSON.stringify(payload)}`,
           );
           // Other logic we can implement here 
         },
