@@ -6,16 +6,25 @@ import { User } from './dto/User_dto';
 // import { ProcessedEvent } from './dto/processed-event.entity';
 import { IdempotencyService } from '../idempotency/idempotency.service';
 import pRetry from 'p-retry';
+import { FraudDetectionService } from '@/fraud-detection/fraud-detection.service';
+import { Loggsvc } from './Logger.svc';
 
 @Injectable()
 export class UserService {
   constructor(
     private dataSrc: DataSource,
     private readonly idempotency: IdempotencyService,
-    private readonly ProducerSvc: ProducerSvc
+    private readonly ProducerSvc: ProducerSvc,
+    private readonly fraudDetectionSvc :FraudDetectionService
   ) { }
 
   async executeTransaction(dto: TransferMoneyDto) {
+    const fraud = await this.fraudDetectionSvc.check(dto)
+    if(fraud.isFraud)
+    {
+      new Loggsvc().log(fraud.reason?.toString() ?? '')
+      return
+    }
     const { eventId, amount, userId, receiverId } = dto;
     console.log('eventeid', eventId);
 

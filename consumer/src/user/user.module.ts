@@ -5,9 +5,10 @@ import { IdempotencyService } from '@/idempotency/idempotency.service';
 import { TransactionConsumer, } from '@/kafka/consumers/transaction.consumer';
 import { TransactionDLQConsumer } from '@/kafka/consumers/DLQ.transaction';
 import { MetricsModule } from '@/prometheus/prometheus.module';
+import { FraudDetectionModule } from '@/fraud-detection/fraud-detection.module';
 
 @Module({
-  imports: [MetricsModule],
+  imports: [MetricsModule,FraudDetectionModule],
   providers: [UserService, ConsumerSvc, IdempotencyService, TransactionConsumer, ProducerSvc, TransactionDLQConsumer]
 })
 export class UserModule { }
