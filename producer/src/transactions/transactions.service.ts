@@ -1,7 +1,9 @@
 import { TransactionRequestedEvent } from '@/events/transaction-requested.event';
-import { ProducerSvc } from '@/kafka/kafka.service';
-import { Injectable } from '@nestjs/common';
+import { ConsumerSvc, ProducerSvc } from '@/kafka/kafka.service';
+import { Loggsvc } from '@/Logger.svc';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { randomUUID } from 'crypto';
+import { Logger } from 'kafkajs';
 
 
 @Injectable()
@@ -31,7 +33,34 @@ export class TransactionsService {
     return {
       message: 'Transaction request sent to Kafka',
       transactionId: event.transactionId,
-      eventId:event.eventId
+      eventId: event.eventId
     };
+  }
+}
+
+@Injectable()
+export class TransactionFailedConsumer implements OnModuleInit {
+  constructor(
+    private readonly consumerSvc: ConsumerSvc,
+    private readonly logger: Loggsvc,
+  ) {}
+
+  async onModuleInit() {
+    await this.consumerSvc.consume(
+      'transaction-failed-group',
+      { topics: ['failed.transaction'] },
+      {
+        eachMessage: async ({ message }) => {
+          const payload = JSON.parse(
+            message.value?.toString() ?? '{}',
+          );
+
+          this.logger.log(
+            `Failed transaction received: ${JSON.stringify(payload)}`,
+          );
+          // Other logic we can implement here 
+        },
+      },
+    );
   }
 }

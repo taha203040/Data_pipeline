@@ -19,6 +19,7 @@ import { IdempotencyService } from './idempotency/idempotency.service';
 import { PrometheusService } from './prometheus/prometheus.service';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus'
 import { MetricsModule } from './prometheus/prometheus.module';
+import { Loggsvc } from './user/Logger.svc';
 @Module({
   imports: [FraudDetectionModule, IdempotencyModule, CommonModule, KafkaModule, TypeOrmModule.forRoot({
     type: 'postgres',
@@ -33,7 +34,7 @@ import { MetricsModule } from './prometheus/prometheus.module';
   controllers: [AppController, FraudDetectionController, KafkaController, CommonController],
   providers: [AppService, KafkaService,
     //  TestConsumer,
-    IdempotencyService, ProducerSvc
+    IdempotencyService, ProducerSvc,Loggsvc 
   ],
 })
 export class AppModule { }

@@ -22,7 +22,7 @@ export class TransactionDLQConsumer implements OnModuleInit {
         try {
           this.logger.log('the payload✅✅✅✅✅✅', payload)
         } catch (e) {
-          this.logger.log('FAILED', e, 'payload ❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌', payload)
+          this.logger.log('FAILED', e, `${payload}`,)
         }
       }
     })

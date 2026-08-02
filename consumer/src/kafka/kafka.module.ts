@@ -1,8 +1,9 @@
 import { Module } from '@nestjs/common';
-import { ConsumerSvc } from './kafka.service';
+import { ConsumerSvc, ProducerSvc } from './kafka.service';
+import { FraudDetectionModule } from '@/fraud-detection/fraud-detection.module';
 
 @Module({
-    providers :[ConsumerSvc],
-    exports :[ConsumerSvc]
+    providers :[ConsumerSvc,ProducerSvc,FraudDetectionModule],
+    exports :[ConsumerSvc,ProducerSvc]
 })
 export class KafkaModule {}
