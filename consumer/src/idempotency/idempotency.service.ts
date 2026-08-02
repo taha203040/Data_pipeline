@@ -2,13 +2,15 @@
 import { Injectable, Inject } from '@nestjs/common';
 import Redis from 'ioredis';
 import { REDIS_CLIENT } from '../redis/redis.module';
+import { Loggsvc } from '@/user/Logger.svc';
 
 @Injectable()
 export class IdempotencyService {
-  constructor(@Inject(REDIS_CLIENT) private readonly redis: Redis) { }
+  constructor(@Inject(REDIS_CLIENT) private readonly redis: Redis,
+private readonly logger :Loggsvc) { }
 
   async claim(eventId: string): Promise<boolean> {
-    console.log("Before Redis");
+    this.logger.log("Before Redis");
 
     try {
       const result = await this.redis.set(
@@ -19,11 +21,11 @@ export class IdempotencyService {
         "NX"
       );
 
-      console.log("After Redis");
+      this.logger.log("After Redis");
 
       return result === "OK";
     } catch (err) {
-      console.log("Redis SET threw: ❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌", err);
+      this.logger.log("Redis SET threw: ❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌", err);
       throw err;
     }
     // throw new Error('Test error dlq❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌')

@@ -1,8 +1,9 @@
 import { Injectable, OnModuleInit } from "@nestjs/common";
 import { ConsumerSvc } from "./kafka/kafka.service";
+import { Loggsvc } from "./user/Logger.svc";
 @Injectable()
 export class TestConsumer implements OnModuleInit {
-    constructor(private readonly consumerSvC: ConsumerSvc) {
+    constructor(private readonly consumerSvC: ConsumerSvc,private readonly logger :Loggsvc) {
 
     }
     async onModuleInit() {
@@ -15,7 +16,7 @@ export class TestConsumer implements OnModuleInit {
         },
             {
                 eachMessage: async ({ topic, partition, message }) => {
-                    console.log('hello from test✅✅✅', {
+                    this.logger.log('hello from test✅✅✅', {
                         value: message.value?.toString(),
                         topic,
                         partition,

@@ -1,12 +1,14 @@
 import { Injectable, OnModuleInit } from "@nestjs/common";
 import { ConsumerSvc, ProducerSvc } from "../kafka.service";
 import { UserService } from "@/user/user.service";
+import { Loggsvc } from "@/user/Logger.svc";
 @Injectable()
 export class TransactionConsumer implements OnModuleInit {
   constructor(
     private readonly kafka: ConsumerSvc,
     private readonly userService: UserService,
-    private readonly ProducerSvc: ProducerSvc
+    private readonly ProducerSvc: ProducerSvc,
+    private readonly logger :Loggsvc,
   ) { }
 
   async onModuleInit() {
@@ -31,7 +33,7 @@ export class TransactionConsumer implements OnModuleInit {
             await this.userService.process(dto);
           }
           catch (err) {
-            console.log("Error LOGGED❌❌❌❌❌❌❌", err)
+            this.logger.log("Error LOGGED❌❌❌❌❌❌❌", err)
             throw new Error('Retry not works')
           }
         },

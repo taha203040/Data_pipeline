@@ -1,9 +1,8 @@
-import { ConsumerSvc, ProducerSvc } from '@/kafka/kafka.service';
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { Any, DataSource } from 'typeorm';
+import { ProducerSvc } from '@/kafka/kafka.service';
+import { Injectable } from '@nestjs/common';
+import {  DataSource } from 'typeorm';
 import { TransferMoneyDto } from './dto/user_transaction';
 import { User } from './dto/User_dto';
-// import { ProcessedEvent } from './dto/processed-event.entity';
 import { IdempotencyService } from '../idempotency/idempotency.service';
 import pRetry from 'p-retry';
 import { FraudDetectionService } from '@/fraud-detection/fraud-detection.service';
@@ -15,52 +14,49 @@ export class UserService {
     private dataSrc: DataSource,
     private readonly idempotency: IdempotencyService,
     private readonly ProducerSvc: ProducerSvc,
-    private readonly fraudDetectionSvc :FraudDetectionService
+    private readonly fraudDetectionSvc :FraudDetectionService,
+    private readonly logger :Loggsvc,
   ) { }
 
   async executeTransaction(dto: TransferMoneyDto) {
     const fraud = await this.fraudDetectionSvc.check(dto)
     if(fraud.isFraud)
     {
-      new Loggsvc().log(fraud.reason?.toString() ?? '')
+      this.logger.log(fraud.reason?.toString() ?? '')
       return
     }
     const { eventId, amount, userId, receiverId } = dto;
-    console.log('eventeid', eventId);
 
     if (!eventId) {
-      console.log('Missing eventId, dropping message ❌');
+      this.logger.log('Missing eventId, dropping message ❌')
       return;
     }
-    console.log('CODE BLOOOOCK ❌❌❌❌❌❌');
-
-
     const queryRunner = this.dataSrc.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
       const claimed = await this.idempotency.claim(eventId);
-      console.log('cliamed?❌❌❌❌❌❌✅✅✅✅',claimed)
+      this.logger.log(`Claimed${claimed}`,)
       if (!claimed) {
-        console.log(`Duplicate event ${eventId}, skipping (Redis) ⏭️`);
+       this.logger.log('`Duplicate event ${eventId}, skipping (Redis) ⏭️`')
         return;
       }
       await this.insertProcessedEvent(queryRunner, eventId);
 
       const { user, receiver } = await this.loadUsers(queryRunner, userId, receiverId);
-      console.log('user data', user, receiver);
+      this.logger.log('user data', user, receiver);
 
       if (user !== null && receiver !== null && user.balance >= amount && userId && receiverId) {
         await this.transferMoney(queryRunner, userId, receiverId, amount);
       } else {
-        console.log('Transaction rejected: invalid user or insufficient balance ⚠️');
+        this.logger.log('Transaction rejected: invalid user or insufficient balance ⚠️')
       }
 
       await queryRunner.commitTransaction();
-      console.log('Transaction done ✅✅✅✅');
+      this.logger.log('Transaction done ✅✅')
     } catch (error) {
-      console.log('Transaction failed ❌❌❌❌', { err: error });
+      this.logger.log('Transaction failed ❌❌❌❌', { err: error })
       await this.ProducerSvc.produce({
         topic: 'DLQ.transaction', messages: [{
           key: dto.eventId,
@@ -78,11 +74,9 @@ export class UserService {
           })
         }]
       })
-      console.log('DLQ CREATED');
-      
+      this.logger.log('DLQ CREATED')
       await queryRunner.rollbackTransaction();
       await this.idempotency.release(eventId);
-      
       throw new Error('DLQ sent to Kafka throw a :' , error as any) 
     } finally {
       await queryRunner.release();
@@ -91,12 +85,12 @@ export class UserService {
 async process(dto: TransferMoneyDto) {
     await pRetry(
         async () => {
-          
-    try {          
-      await this.executeTransaction(dto);
-        } catch (er) {
-                 console.log('max retry reach✅✅✅✅✅✅')
-                      }
+     try {
+     await this.executeTransaction(dto);
+     } catch (err) {
+      this.logger.log('max retry reach✅✅✅✅✅✅')
+     }
+    
         },
         {
             retries: 3,
@@ -116,7 +110,7 @@ async process(dto: TransferMoneyDto) {
       );
     } catch (insertErr: any) {
       if (insertErr.code === '23505') {
-        console.log(`Duplicate event ${eventId}, skipping (DB) ⏭️`);
+        this.logger.log('Duplicate event ${eventId}, skipping (DB) ⏭️')
         await queryRunner.rollbackTransaction();
         return;
       }
@@ -141,13 +135,13 @@ async process(dto: TransferMoneyDto) {
 }
   // async process(dto: TransferMoneyDto) {
   //   const { eventId, amount, userId, receiverId } = dto;
-  //   console.log('eventeid', eventId);
+  //   this.logger.log('eventeid', eventId);
 
   //   if (!eventId) {
-  //     console.log('Missing eventId, dropping message ❌');
+  //     this.logger.log('Missing eventId, dropping message ❌');
   //     return;
   //   }
-  //   console.log('CODE BLOOOOCK ❌❌❌❌❌❌');
+  //   this.logger.log('CODE BLOOOOCK ❌❌❌❌❌❌');
 
 
   //   const queryRunner = this.dataSrc.createQueryRunner();
@@ -156,26 +150,26 @@ async process(dto: TransferMoneyDto) {
 
   //   try {
   //     const claimed = await this.idempotency.claim(eventId);
-  //     console.log('cliamed?❌❌❌❌❌❌✅✅✅✅',claimed)
+  //     this.logger.log('cliamed?❌❌❌❌❌❌✅✅✅✅',claimed)
   //     if (!claimed) {
-  //       console.log(`Duplicate event ${eventId}, skipping (Redis) ⏭️`);
+  //       this.logger.log(`Duplicate event ${eventId}, skipping (Redis) ⏭️`);
   //       return;
   //     }
   //     await this.insertProcessedEvent(queryRunner, eventId);
 
   //     const { user, receiver } = await this.loadUsers(queryRunner, userId, receiverId);
-  //     console.log('user data', user, receiver);
+  //     this.logger.log('user data', user, receiver);
 
   //     if (user !== null && receiver !== null && user.balance >= amount && userId && receiverId) {
   //       await this.transferMoney(queryRunner, userId, receiverId, amount);
   //     } else {
-  //       console.log('Transaction rejected: invalid user or insufficient balance ⚠️');
+  //       this.logger.log('Transaction rejected: invalid user or insufficient balance ⚠️');
   //     }
 
   //     await queryRunner.commitTransaction();
-  //     console.log('Transaction done ✅✅✅✅');
+  //     this.logger.log('Transaction done ✅✅✅✅');
   //   } catch (error) {
-  //     console.log('Transaction failed ❌❌❌❌', { err: error });
+  //     this.logger.log('Transaction failed ❌❌❌❌', { err: error });
   //     await this.ProducerSvc.produce({
   //       topic: 'DLQ.transaction', messages: [{
   //         key: dto.eventId,

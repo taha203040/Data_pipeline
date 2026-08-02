@@ -2,9 +2,9 @@
 import { Module, Global } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
+import { Loggsvc } from '@/user/Logger.svc';
 
 export const REDIS_CLIENT = 'REDIS_CLIENT';
-
 @Global() // so you don't re-import it into every module that needs idempotency
 @Module({
   imports: [ConfigModule],
@@ -25,7 +25,7 @@ export const REDIS_CLIENT = 'REDIS_CLIENT';
         });
 
         // client.on('error', (err) => console.error('Redis connection error:', err));
-        client.on('connect', () => console.log('Redis connected'));
+        client.on('connect', () => new Loggsvc().log('Redis connected'));
 
         return client;
       },
