@@ -9,7 +9,7 @@ A production-grade, event-driven financial transaction processing system built w
 ## Features
 
 - **Event-Driven Architecture**: Decoupled services communicating via Kafka
-- **Fraud Detection**: Real-time validation with Redis-based rate limiting
+- **Fraud Detection**: Real-time validation with Redis-based rate limiting (Basic detection , smart one with ML Soon)
 - **Exactly-Once Processing**: Idempotency guarantees using Redis distributed locks
 - **Resilience**: Automatic retries with exponential backoff and DLQ fallback
 - **Observability**: Prometheus metrics and structured logging
